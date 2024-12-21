@@ -7,6 +7,7 @@ on:
     branches:
       - main
   workflow_dispatch:
+
 jobs:
   build:
     runs-on: ubuntu-latest
@@ -23,23 +24,25 @@ jobs:
         uses: actions/upload-artifact@v3
         with:
           name: MyWebApp
-          path: '${{ github.workspace }}'
+          path: './MyWebApp/target/*.war'
+
   deploy:
     runs-on: ubuntu-latest
     needs: build
     environment:
       name: 'Production'
-      url: ${{ steps.deploy-to-webapp.outputs.webapp-url }}
     steps:
       - name: Download artifact from build job
         uses: actions/download-artifact@v3
         with:
           name: MyWebApp
+      - name: Log in to Azure
+        uses: azure/login@v1
+        with:
+          creds: ${{ secrets.AZURE_CREDENTIALS }}
       - name: Deploy to Azure Web App
-        id: deploy-to-webapp
         uses: azure/webapps-deploy@v2
         with:
           app-name: 'spingbootwebapp'
-          slot-name: 'Production'
           publish-profile: ${{ secrets.AZUREAPPSERVICE_PUBLISHPROFILE_76B948D486E54ED7B06775D572207D40 }}
-          package: '*.war'
+          package: './MyWebApp/target/*.war'
